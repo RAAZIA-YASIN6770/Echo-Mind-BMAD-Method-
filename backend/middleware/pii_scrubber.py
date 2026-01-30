@@ -23,9 +23,21 @@ Accuracy Target: >95% detection, <5% false positives
 import re
 import logging
 from typing import Dict, List, Tuple, Optional
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
+
+# Try to import FastAPI, but allow standalone usage without it
+try:
+    from fastapi import Request, Response
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.types import ASGIApp
+    FASTAPI_AVAILABLE = True
+except ImportError:
+    FASTAPI_AVAILABLE = False
+    # Define dummy classes for type hints
+    Request = None
+    Response = None
+    BaseHTTPMiddleware = object
+    ASGIApp = None
+
 import hashlib
 from datetime import datetime
 

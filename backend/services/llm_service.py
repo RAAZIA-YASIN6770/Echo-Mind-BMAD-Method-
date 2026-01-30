@@ -18,9 +18,35 @@ import logging
 import time
 from typing import Dict, Any, Optional, List
 from pathlib import Path
-import openai
-from openai import OpenAI, OpenAIError, RateLimitError, APITimeoutError
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+# Try to import OpenAI, but allow Mock Mode to work without it
+try:
+    import openai
+    from openai import OpenAI, OpenAIError, RateLimitError, APITimeoutError
+    from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    # Define dummy classes for type hints
+    OpenAI = None
+    OpenAIError = Exception
+    RateLimitError = Exception
+    APITimeoutError = Exception
+    
+    # Dummy retry decorator
+    def retry(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    
+    def stop_after_attempt(*args, **kwargs):
+        pass
+    
+    def wait_exponential(*args, **kwargs):
+        pass
+    
+    def retry_if_exception_type(*args, **kwargs):
+        pass
 
 logger = logging.getLogger(__name__)
 
@@ -30,18 +56,26 @@ class LLMService:
     OpenAI GPT-4o Service with Master Socratic Prompt Integration
     """
     
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, mock_mode: bool = False):
         """
         Initialize LLM Service
         
         Args:
             api_key: OpenAI API key (defaults to environment variable)
+            mock_mode: If True, use mock responses instead of calling OpenAI API
         """
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValueError("OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
         
-        self.client = OpenAI(api_key=self.api_key)
+        # Enable Mock Mode if no API key is provided
+        if not self.api_key:
+            self.mock_mode = True
+            self.client = None
+            logger.warning("⚠️ No API key found. Running in MOCK MODE with pre-defined responses.")
+        else:
+            self.mock_mode = mock_mode
+            self.client = OpenAI(api_key=self.api_key)
+            logger.info(f"✅ LLM Service initialized with OpenAI API")
+        
         self.master_prompt = self._load_master_prompt()
         
         # Model configuration
@@ -60,7 +94,10 @@ class LLMService:
             "gpt-3.5-turbo": 0.002
         }
         
-        logger.info(f"✅ LLM Service initialized with model: {self.default_model}")
+        if self.mock_mode:
+            logger.info("🎭 LLM Service initialized in MOCK MODE")
+        else:
+            logger.info(f"✅ LLM Service initialized with model: {self.default_model}")
     
     def _load_master_prompt(self) -> str:
         """
@@ -178,7 +215,7 @@ CURRENT CONTEXT:
         emotional_state: str = "engaged"
     ) -> Dict[str, Any]:
         """
-        Generate a Socratic response using OpenAI API
+        Generate a Socratic response using OpenAI API or Mock Mode
         
         Args:
             user_message: The child's question/message
@@ -198,6 +235,12 @@ CURRENT CONTEXT:
                 - latency_ms: Response time in milliseconds
         """
         start_time = time.time()
+        
+        # If in Mock Mode, return mock response
+        if self.mock_mode:
+            logger.info(f"🎭 Using Mock Mode | category={category}")
+            time.sleep(0.05)  # Simulate slight delay
+            return self._get_mock_response(category, user_message)
         
         try:
             # Select model based on complexity
@@ -294,6 +337,75 @@ CURRENT CONTEXT:
         """
         cost_per_1k = self.cost_per_1k_tokens.get(model, 0.005)
         return (tokens / 1000) * cost_per_1k
+    
+    def _get_mock_response(self, category: str, user_message: str) -> Dict[str, Any]:
+        """
+        Generate mock Socratic responses for testing without API key
+        
+        Args:
+            category: Question category (math/science/logic/language/general)
+            user_message: User's message (for context)
+        
+        Returns:
+            Mock response dictionary
+        """
+        # Mock Socratic responses by category
+        mock_responses = {
+            "math": [
+                "Great question! 🤔 Before we dive in, what do you already know about this topic? Even a small idea helps!",
+                "Interesting! Let's break this down together. What's the first step you think we should take?",
+                "I love your curiosity! 🌟 Can you think of a real-world example where you've seen something like this?",
+                "That's a thoughtful question! What patterns do you notice here?",
+                "Wonderful! Let's explore this step by step. What happens if we start with the simplest case?",
+            ],
+            "science": [
+                "Fascinating question! 🔬 What do you think might happen and why?",
+                "Great thinking! Have you noticed anything similar in your everyday life?",
+                "I love your curiosity! 🌱 What do you already know about how this works?",
+                "Excellent question! Let's think about cause and effect. What do you think causes this?",
+                "That's so interesting! Can you make a prediction about what might happen next?",
+            ],
+            "logic": [
+                "Smart question! 🧩 Let's think this through together. What clues do we have?",
+                "I like how you're thinking! What's the first thing we need to figure out?",
+                "Great reasoning! 💡 Can you think of a similar problem you've solved before?",
+                "Excellent! Let's break this into smaller pieces. What's the simplest part?",
+                "Wonderful question! What do you think the answer might be, and why?",
+            ],
+            "language": [
+                "Beautiful question! 📚 What do you notice about the words or patterns here?",
+                "I love your curiosity! What does this remind you of?",
+                "Great thinking! 🌟 Can you think of other examples that are similar?",
+                "Interesting! What do you think this means based on the context?",
+                "Wonderful! Let's explore this together. What clues can you find in the sentence?",
+            ],
+            "general": [
+                "That's a great question! 🤔 What do you already know about this?",
+                "I love your curiosity! 🌟 What makes you interested in this topic?",
+                "Interesting! Let's explore this together. What do you think?",
+                "Great thinking! What's your first instinct about this?",
+                "Wonderful question! What have you noticed or experienced about this?",
+            ]
+        }
+        
+        # Get responses for category, fallback to general
+        responses = mock_responses.get(category, mock_responses["general"])
+        
+        # Select a random response
+        import random
+        response_text = random.choice(responses)
+        
+        logger.info(f"🎭 Mock response generated | category={category}")
+        
+        return {
+            "response": response_text,
+            "model_used": "mock",
+            "tokens_used": 0,
+            "cost": 0.0,
+            "latency_ms": 50,  # Simulate fast response
+            "success": True,
+            "mock_mode": True
+        }
     
     def _get_fallback_response(self, error_msg: str) -> Dict[str, Any]:
         """
