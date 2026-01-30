@@ -1,0 +1,3 @@
+"""
+EchoMind AI - Tests Package
+"""
