@@ -1,0 +1,38 @@
+# ============================================
+# EchoMind AI - Django Dependencies
+# ============================================
+
+# Django Framework
+django==6.0.1
+django-cors-headers==4.3.1
+
+# Database
+sqlalchemy==2.0.25 # Kept for potential migrations or external service compatibility
+psycopg2-binary==2.9.9
+
+# Caching
+redis==5.0.1
+
+# LLM Integration
+openai==1.10.0
+tiktoken==0.5.2
+
+# Security & Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.2
+
+# PII Detection & NLP
+spacy==3.7.2
+
+# AWS SDK
+boto3==1.34.34
+
+# Utilities
+python-dotenv==1.0.0
+httpx==0.26.0
+tenacity==8.2.3
+
+# Date & Time
+python-dateutil==2.8.2
+pytz==2024.1
