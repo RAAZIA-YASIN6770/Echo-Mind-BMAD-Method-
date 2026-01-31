@@ -16,7 +16,24 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from core import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Auth Endpoints
+    path('api/auth/register', views.register, name='register'),
+    path('api/auth/login', views.login, name='login'),
+    
+    # Onboarding
+    path('api/user/onboarding', views.onboarding, name='onboarding'),
+    
+    # Chat
+    path('api/chat/message', views.chat_message, name='chat_message'),
+    
+    # Parent Dashboard
+    path('api/parent/dashboard', views.parent_dashboard, name='parent_dashboard'),
+    
+    # Monitoring
+    path('api/admin/metrics', views.system_metrics, name='metrics'),
 ]
