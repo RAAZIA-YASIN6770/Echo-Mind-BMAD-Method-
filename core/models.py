@@ -25,7 +25,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('parent', 'Parent'),
         ('educator', 'Educator')
     ])
-    parent_id = models.ForeignKey('self', ondelete=models.SET_NULL, null=True, blank=True, related_name='children')
+    parent_id = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
     parent_pin = models.CharField(max_length=6, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -41,7 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class UserProfile(models.Model):
     profile_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, ondelete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     display_name = models.CharField(max_length=100, null=True, blank=True)
     grade_level = models.IntegerField(null=True, blank=True)
     preferences = models.JSONField(default=dict)
@@ -53,7 +53,7 @@ class UserProfile(models.Model):
 
 class SafetyLog(models.Model):
     log_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, ondelete=models.CASCADE, related_name='safety_logs')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='safety_logs')
     session_id = models.UUIDField(null=True, blank=True)
     violation_type = models.CharField(max_length=50)
     severity = models.CharField(max_length=10, choices=[
@@ -69,7 +69,7 @@ class SafetyLog(models.Model):
 
 class ConceptMastery(models.Model):
     mastery_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, ondelete=models.CASCADE, related_name='concept_mastery')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='concept_mastery')
     concept_name = models.CharField(max_length=100)
     mastery_level = models.CharField(max_length=20, choices=[
         ('exposure', 'Exposure'),
@@ -86,7 +86,7 @@ class ConceptMastery(models.Model):
 
 class Session(models.Model):
     session_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, ondelete=models.CASCADE, related_name='sessions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sessions')
     started_at = models.DateTimeField(auto_now_add=True)
     ended_at = models.DateTimeField(null=True, blank=True)
     message_count = models.IntegerField(default=0)
@@ -95,7 +95,7 @@ class Session(models.Model):
 
 class ParentSettings(models.Model):
     settings_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    parent = models.OneToOneField(User, ondelete=models.CASCADE, related_name='parent_settings')
+    parent = models.OneToOneField(User, on_delete=models.CASCADE, related_name='parent_settings')
     daily_time_limit_minutes = models.IntegerField(default=60)
     allowed_categories = models.JSONField(default=lambda: ["math", "science", "logic", "language", "general"])
     safety_alert_threshold = models.CharField(max_length=10, default="medium")
