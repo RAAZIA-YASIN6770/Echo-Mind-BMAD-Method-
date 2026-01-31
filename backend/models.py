@@ -66,10 +66,23 @@ class User(Base):
         nullable=False,
         comment="Account active status"
     )
+    parent_pin = Column(
+        String(6),
+        nullable=True,
+        comment="4-6 digit PIN for parent dashboard access"
+    )
+    parent_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
+        comment="Reference to parent if this is a child account"
+    )
     
     # Relationships
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     safety_logs = relationship("SafetyLog", back_populates="user", cascade="all, delete-orphan")
+    children = relationship("User", backref="parent", remote_side=[user_id])
+    parent_settings = relationship("ParentSettings", back_populates="parent", uselist=False, cascade="all, delete-orphan")
     
     # Constraints
     __table_args__ = (
@@ -373,6 +386,35 @@ class Session(Base):
     def __repr__(self):
         return f"<Session(session_id={self.session_id}, user_id={self.user_id}, active={self.is_active})>"
 
+
+# ============================================
+# Sprint 5 Models: Parent Dashboard & Controls
+# ============================================
+
+class ParentSettings(Base):
+    """
+    Parent Settings table - Stores controls and preferences for child accounts
+    """
+    __tablename__ = "parent_settings"
+    
+    settings_id = Column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
+    parent_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("users.user_id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True
+    )
+    daily_time_limit_minutes = Column(Integer, default=60)
+    allowed_categories = Column(JSONB, default=["math", "science", "logic", "language", "general"])
+    safety_alert_threshold = Column(String(10), default="medium") # low, medium, high
+    weekly_report_enabled = Column(Boolean, default=True)
+    
+    # Relationship
+    parent = relationship("User", back_populates="parent_settings")
 
 # Additional models for future sprints (commented for now)
 """
