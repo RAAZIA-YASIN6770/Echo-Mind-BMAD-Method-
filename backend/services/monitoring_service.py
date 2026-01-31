@@ -20,9 +20,9 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 class MonitoringService:
-    \"\"\"
+    """
     Internal monitoring engine to track system health and performance
-    \"\"\"
+    """
     
     def __init__(self):
         self.start_time = datetime.utcnow()
@@ -40,7 +40,7 @@ class MonitoringService:
         self._lock = threading.Lock()
 
     def track_request(self, latency_ms: float, success: bool = True, error_msg: str = None):
-        \"\"\"Record a request metric\"\"\"
+        """Record a request metric"""
         with self._lock:
             self.metrics["total_requests"] += 1
             self.metrics["latency_history"].append(latency_ms)
@@ -62,9 +62,9 @@ class MonitoringService:
                     self._trigger_alert("CRITICAL_ERROR_RATE", f"Error rate reached {error_rate*100:.1f}%")
 
     def get_system_metrics(self) -> Dict[str, Any]:
-        \"\"\"
+        """
         Return aggregate metrics for the monitoring dashboard
-        \"\"\"
+        """
         uptime = datetime.utcnow() - self.start_time
         
         avg_latency = 0
@@ -85,7 +85,7 @@ class MonitoringService:
         }
 
     def _trigger_alert(self, alert_type: str, message: str):
-        \"\"\"Simulate PagerDuty/Slack alert\"\"\"
+        """Simulate PagerDuty/Slack alert"""
         logger.critical(f"🔔 ALERT TRIGGERED [{alert_type}]: {message}")
         # In production, this would call PagerDuty API or AWS SNS
 

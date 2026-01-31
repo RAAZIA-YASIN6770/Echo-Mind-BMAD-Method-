@@ -18,9 +18,9 @@ from typing import List, Dict, Any, Optional
 logger = logging.getLogger(__name__)
 
 class ParentService:
-    \"\"\"
+    """
     Service for parent dashboard and child monitoring
-    \"\"\"
+    """
     
     def __init__(self, db_session=None):
         self.db = db_session
@@ -38,9 +38,9 @@ class ParentService:
         }
 
     def get_child_summaries(self, parent_id: str) -> List[Dict[str, Any]]:
-        \"\"\"
+        """
         Get a high-level summary of all children linked to this parent
-        \"\"\"
+        """
         # In production: query DB for all users where parent_id = parent_id
         return [
             {
@@ -54,9 +54,9 @@ class ParentService:
         ]
 
     def get_detailed_report(self, child_id: str) -> Dict[str, Any]:
-        \"\"\"
+        """
         Get detailed progress and safety metrics for a specific child
-        \"\"\"
+        """
         # In production: aggregate from ConceptMastery and SafetyLog tables
         child_data = self._mock_child_data.get(child_id, self._mock_child_data["child_1"])
         
@@ -84,17 +84,17 @@ class ParentService:
         }
 
     def update_controls(self, parent_id: str, settings: Dict[str, Any]) -> bool:
-        \"\"\"
+        """
         Update parental controls like time limits and allowed categories
-        \"\"\"
+        """
         # In production: update ParentSettings table
         logger.info(f"Updated controls for parent {parent_id}: {settings}")
         return True
 
     def generate_weekly_email_data(self, child_id: str) -> Dict[str, Any]:
-        \"\"\"
+        """
         Prepare data for a weekly progress email
-        \"\"\"
+        """
         report = self.get_detailed_report(child_id)
         return {
             "subject": f"Weekly Learning Report for {report['name']}",
