@@ -17,6 +17,8 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from api.onboarding import onboarding_bp
+from api.chat import chat_bp
+from middleware.security_waf import SecurityWAF
 
 # Configure logging
 logging.basicConfig(
@@ -38,8 +40,12 @@ CORS(app, resources={
     }
 })
 
+# Apply Lock 1: Security WAF (Network Layer Simulation)
+SecurityWAF.apply_lock(app)
+
 # Register blueprints
 app.register_blueprint(onboarding_bp)
+app.register_blueprint(chat_bp)
 
 # Root endpoint
 @app.route('/')
